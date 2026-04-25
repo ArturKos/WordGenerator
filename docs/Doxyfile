@@ -1,0 +1,19 @@
+PROJECT_NAME           = "WordGenerator"
+PROJECT_BRIEF          = "Lexicographic word enumerator over a fixed alphabet."
+
+INPUT                  = include src
+RECURSIVE              = YES
+
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+JAVADOC_AUTOBRIEF      = YES
+OPTIMIZE_OUTPUT_FOR_C  = YES
+
+OUTPUT_DIRECTORY       = docs/build
+GENERATE_LATEX         = NO
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+
+QUIET                  = YES
+WARN_AS_ERROR          = NO
+WARN_NO_PARAMDOC       = YES
