@@ -1,64 +1,76 @@
 # WordGenerator
 
-A **word and combination generator** built with **C++ Builder 6** that produces all possible strings of a given length from a character alphabet using recursive permutation.
+A small C library and command-line tool that enumerates every string of a
+given length over a fixed alphabet, in lexicographic order.
 
-![C++](https://img.shields.io/badge/C%2B%2B-Builder%206-blue)
-![Windows](https://img.shields.io/badge/Platform-Windows-0078D6)
-![Algorithm](https://img.shields.io/badge/Algorithm-Combinatorics-green)
+For an alphabet of `n` characters and a target length `k`, the program emits
+all `n^k` words by treating the output as a `k`-digit number in base `n`
+and incrementing it from right to left with carry — the same mechanism a
+mechanical odometer uses.
 
-## Features
+## Why it's interesting
 
-- **Exhaustive word generation** -- produces every possible combination of characters for a specified word length
-- **Recursive index advancement** -- uses a recursive `NastepneSlowo` (NextWord) function that increments character indices with carry propagation, similar to an odometer
-- **Configurable alphabet** -- define any set of characters as the generation dictionary
-- **VCL GUI** -- displays all generated words in a scrollable `TMemo` component
-- **Termination detection** -- `Koniec_Budowy` (EndOfBuild) checks when all indices have reached their maximum value
+- **Clean separation** between algorithm and I/O: the library accepts a
+  callback per word, so the same engine drives the CLI, the test suite, or
+  any other sink.
+- **Iterative carry-propagation counter** in place of the recursive
+  prototype it grew out of — bounded stack, simpler control flow.
+- **Hermetic GoogleTest suite** wired in via CMake `FetchContent`: no
+  system-installed dependencies required.
+- **Doxygen-documented** public API, compiled with `-Wall -Wextra
+  -Wpedantic` warning-clean on GCC 11+.
 
-## How It Works
+## Build and run
 
-The algorithm treats each position in the word as a digit in a variable-base number system:
+```bash
+cmake -S . -B build
+cmake --build build -j
+./build/word_generator artur 3      # 125 words, one per line
+```
 
-1. An integer array (`slowo`) tracks the current character index at each position
-2. `NastepneSlowo` increments the rightmost index; on overflow, it resets to 0 and recurses left (carry)
-3. `ZapiszSlowo` maps the index array to characters from the alphabet and appends the result
-4. Generation continues until all positions hold the maximum index value
+Run the test suite:
 
-For an alphabet of length `n` and word length `k`, the generator produces `n^k` combinations.
+```bash
+ctest --test-dir build --output-on-failure
+```
 
-**Example:** Alphabet `"artur"` (5 chars), length 5 = 3,125 combinations.
+Generate API docs (requires `doxygen`):
 
-## Dependencies
+```bash
+doxygen docs/Doxyfile
+xdg-open docs/build/html/index.html
+```
 
-| Component | Purpose |
-|-----------|---------|
-| C++ Builder 6 | IDE, VCL framework, and compiler |
-
-## Building
-
-1. Open `Slownik.bpr` in **C++ Builder 6**.
-2. Press **F9** to build and run.
-
-## Usage
-
-1. Launch the application.
-2. Click the button to generate all word combinations.
-3. Results appear in the memo field, one word per line.
-
-The alphabet and word length are currently defined in source code (`BudujSlowa` call in `Button1Click`). Modify the character array and length parameter to customize generation.
-
-## Project Structure
+## Project layout
 
 ```
 WordGenerator/
-├── Slownik.cpp       # Application entry point (WinMain)
-├── Slownik.bpr       # C++ Builder 6 project file
-├── Slownik.res       # Compiled resource file
-├── main.cpp          # Word generation logic and form event handlers
-├── main.h            # TForm1 class declaration (Button, Memo)
-├── main.dfm          # Form layout definition
-└── main.ddp          # Diagram file
+├── CMakeLists.txt              # Build configuration
+├── include/word_generator.h    # Public API + Doxygen
+├── src/word_generator.c        # Library: counter + callback loop
+├── src/main.c                  # CLI front-end
+├── tests/test_word_generator.cpp   # GoogleTest suite (11 cases)
+└── docs/Doxyfile               # API docs configuration
 ```
+
+## Library API
+
+```c
+#include "word_generator.h"
+
+bool print(const char *word, void *user_data) {
+    (void)user_data;
+    puts(word);
+    return true;   /* return false to stop early */
+}
+
+generate_words("01", 2, 4, print, NULL);   /* 16 binary strings of length 4 */
+```
+
+Duplicate characters in the alphabet are allowed and produce duplicate
+output words — the generator iterates over index combinations, not
+distinct values.
 
 ## License
 
-This project is provided as-is for educational purposes.
+Provided as-is for educational and portfolio purposes.
